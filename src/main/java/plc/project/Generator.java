@@ -30,7 +30,51 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Source ast) {
-        throw new UnsupportedOperationException(); //TODO
+        //class header
+        print("public class Main {");
+        newline(0);
+
+        newline(++indent);
+        //source fields
+        for(int i = 0; i < ast.getFields().size(); i++){
+            print(ast.getFields().get(i));
+
+            if(i < ast.getFields().size()-1){
+                newline(indent);
+            }
+        }
+
+        if(!ast.getFields().isEmpty()){
+            newline(0);
+            newline(indent);
+        }
+
+        //java main method
+        print("public static void main(String[] args) {");
+        newline(++indent);
+        print("System.exit(new Main().main());");
+        newline(--indent);
+        print("}");
+
+        newline(0);
+        newline(indent);
+
+        //source methods
+        for(int i = 0; i < ast.getMethods().size(); i++){
+            print(ast.getMethods().get(i));
+            newline(0);
+
+            if(i < ast.getMethods().size()-1){
+                newline(indent);
+            }
+        }
+
+
+
+        newline(--indent);
+        print("}");
+
+        return null;
     }
 
     @Override
@@ -45,9 +89,76 @@ public final class Generator implements Ast.Visitor<Void> {
         return null;
     }
 
+    public String getJVMTypeFromString(String type){
+        switch (type){
+            case "Any":
+                return "Object";
+
+            case "Nil":
+                return "Void";
+
+            case "IntegerIterable":
+                return "Iterable<Integer>";
+
+            case "Comparable":
+                return "Comparable";
+
+            case "Boolean":
+                return "boolean";
+
+            case "Integer":
+                return "int";
+
+            case "Decimal":
+                return "double";
+
+            case "Character":
+                return "char";
+
+            case "String":
+                return "String";
+
+            default:
+                return "YouFuckedUp";
+        }
+    }
+
     @Override
     public Void visit(Ast.Method ast) {
-        throw new UnsupportedOperationException(); //TODO
+        String returnType;
+        if(ast.getReturnTypeName().isPresent()){
+            returnType = getJVMTypeFromString(ast.getReturnTypeName().get());
+        }
+        else{
+            returnType = "Void";
+        }
+
+        print(returnType, " ", ast.getName(), "(");
+
+        for(int i = 0; i < ast.getParameterTypeNames().size(); i++){
+            if(i > 0){
+                print(", ");
+            }
+
+            print(getJVMTypeFromString(ast.getParameterTypeNames().get(i)), " ", ast.getParameters().get(i));
+        }
+
+        print(") {");
+        if(!ast.getStatements().isEmpty()){
+            //indent and print statements
+            newline(++indent);
+            for(int i = 0; i < ast.getStatements().size(); i++){
+                print(ast.getStatements().get(i));
+                if(i < ast.getStatements().size() - 1){
+                    newline(indent);
+                }
+            }
+            newline(--indent);
+        }
+
+        print("}");
+
+        return null;
     }
 
     @Override
